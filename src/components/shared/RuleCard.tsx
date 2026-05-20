@@ -1,0 +1,86 @@
+import { useState } from 'react'
+import { CheckCircle2, XCircle, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
+import { cn } from '../../lib/utils'
+import { ConfidenceBadge } from './ConfidenceBadge'
+import type { ValidationRule } from '../../types'
+
+interface RuleCardProps {
+  rule: ValidationRule
+  isExpanded?: boolean
+  onToggle?: () => void
+}
+
+const StatusIcon = ({ status }: { status: ValidationRule['status'] }) => {
+  if (status === 'pass') return <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+  if (status === 'warning') return <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+  return <XCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+}
+
+export function RuleCard({ rule, isExpanded: controlledExpanded, onToggle }: RuleCardProps) {
+  const [internalExpanded, setInternalExpanded] = useState(false)
+  const expanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded
+
+  const handleToggle = () => {
+    if (onToggle) onToggle()
+    else setInternalExpanded((v) => !v)
+  }
+
+  const rowBg =
+    rule.status === 'fail'
+      ? 'hover:bg-red-50'
+      : rule.status === 'warning'
+      ? 'hover:bg-amber-50'
+      : 'hover:bg-gray-50'
+
+  const expandedBg =
+    rule.status === 'fail'
+      ? 'bg-red-50 border-red-100'
+      : rule.status === 'warning'
+      ? 'bg-amber-50 border-amber-100'
+      : 'bg-gray-50 border-gray-100'
+
+  return (
+    <div className={cn('border-b border-gray-100 last:border-0', expanded && 'bg-gray-50')}>
+      <button
+        onClick={handleToggle}
+        className={cn(
+          'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors',
+          rowBg,
+        )}
+      >
+        <StatusIcon status={rule.status} />
+        <span className="flex-1 text-sm font-medium text-gray-800">{rule.name}</span>
+        <ConfidenceBadge value={rule.confidence} />
+        {expanded ? (
+          <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+        )}
+      </button>
+
+      {expanded && (
+        <div className={cn('px-4 pb-4 border-t', expandedBg)}>
+          <p className="text-xs text-gray-500 mt-3 mb-2">{rule.description}</p>
+          <div className="bg-white rounded-md border border-gray-200 px-3 py-2 mb-3">
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">AI Finding</p>
+            <p className="text-sm text-gray-700 leading-relaxed">{rule.evidence}</p>
+          </div>
+          {rule.actions.length > 0 && (
+            <div className="flex gap-2">
+              {rule.actions.includes('approve_anyway') && (
+                <button className="text-xs font-medium px-3 py-1.5 rounded-md bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors">
+                  Approve anyway
+                </button>
+              )}
+              {rule.actions.includes('reject_reason') && (
+                <button className="text-xs font-medium px-3 py-1.5 rounded-md bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 transition-colors">
+                  Reject with reason
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
