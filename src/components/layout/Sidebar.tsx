@@ -30,7 +30,7 @@ export function Sidebar() {
             <Zap size={18} className="text-white" />
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-900 leading-tight">AI Copilot</p>
+            <p className="text-sm font-bold text-gray-900 leading-tight">AR Co-Pilot</p>
             <p className="text-xs text-gray-400 leading-tight">Deal Intelligence</p>
           </div>
         </div>
