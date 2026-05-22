@@ -14,7 +14,6 @@ import {
 } from 'lucide-react'
 import { mockDeals } from '../data/mockDeals'
 import { mockAuditLog } from '../data/mockAuditLog'
-import { useDeals } from '../context/DealsContext'
 import { formatCurrency, formatTimeAgo, cn } from '../lib/utils'
 
 function TrafficLightCard({
@@ -115,35 +114,24 @@ function formatTime(iso: string) {
 
 export function Dashboard() {
   const navigate = useNavigate()
-  const { getEffectiveStatus } = useDeals()
-
   const urgentDeals = mockDeals
-    .filter((d) => {
-      const s = getEffectiveStatus(d.id)
-      return s === 'needs_review' || s === 'stuck'
-    })
+    .filter((d) => d.status === 'needs_review' || d.status === 'stuck')
     .sort((a, b) => {
-      // Stuck first, then by criticalIssues desc
       if (a.status === 'stuck' && b.status !== 'stuck') return -1
       if (b.status === 'stuck' && a.status !== 'stuck') return 1
       return b.criticalIssues - a.criticalIssues
     })
     .slice(0, 5)
 
-  const reviewCount = mockDeals.filter((d) => {
-    const s = getEffectiveStatus(d.id)
-    return s === 'needs_review' || s === 'stuck'
-  }).length
+  const reviewCount = mockDeals.filter(
+    (d) => d.status === 'needs_review' || d.status === 'stuck',
+  ).length
 
-  const approvedCount = mockDeals.filter((d) => {
-    const s = getEffectiveStatus(d.id)
-    return s === 'auto_approved' || s === 'approved'
-  }).length + 44 // base auto-approvals from today not in list
+  const approvedCount =
+    mockDeals.filter((d) => d.status === 'auto_approved' || d.status === 'approved').length + 44
 
-  const rejectedCount = mockDeals.filter((d) => {
-    const s = getEffectiveStatus(d.id)
-    return s === 'auto_rejected' || s === 'rejected'
-  }).length + 6
+  const rejectedCount =
+    mockDeals.filter((d) => d.status === 'auto_rejected' || d.status === 'rejected').length + 6
 
   const totalToday = approvedCount + reviewCount + rejectedCount
   const aiHandledPct = Math.round(((approvedCount + rejectedCount) / totalToday) * 100)
