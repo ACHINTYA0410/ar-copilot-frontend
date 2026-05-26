@@ -255,10 +255,51 @@ export function DealApprovalDashboard() {
   // ── Loading state ───────────────────────────────────────────────────────────
   if (dealLoading) {
     return (
-      <div className="flex flex-1 items-center justify-center bg-gray-50">
-        <div className="flex items-center gap-3 text-gray-400">
-          <Loader2 className="w-6 h-6 animate-spin" />
-          <span className="text-sm">Loading deal...</span>
+      <div className="flex flex-1 overflow-hidden bg-gray-50">
+        {/* Center column Skeleton */}
+        <div className="flex-1 overflow-y-auto min-w-0">
+          <div className="max-w-3xl mx-auto px-6 py-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-20 h-4 bg-gray-200 rounded animate-pulse" />
+              <div className="w-4 h-4 bg-gray-200 rounded animate-pulse" />
+              <div className="w-32 h-4 bg-gray-200 rounded animate-pulse" />
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 p-5 mb-5 h-32 flex flex-col justify-between">
+              <div className="flex justify-between">
+                <div className="flex gap-2">
+                  <div className="w-24 h-6 bg-gray-100 rounded animate-pulse" />
+                  <div className="w-20 h-6 bg-gray-100 rounded-full animate-pulse" />
+                </div>
+                <div className="flex gap-2">
+                  <div className="w-24 h-8 bg-gray-100 rounded-lg animate-pulse" />
+                  <div className="w-24 h-8 bg-gray-100 rounded-lg animate-pulse" />
+                </div>
+              </div>
+              <div className="w-48 h-8 bg-gray-200 rounded animate-pulse" />
+              <div className="flex gap-4">
+                <div className="w-24 h-5 bg-gray-100 rounded animate-pulse" />
+                <div className="w-32 h-5 bg-gray-100 rounded animate-pulse" />
+              </div>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 p-5 h-40">
+              <div className="flex justify-between mb-4">
+                <div className="w-32 h-5 bg-gray-200 rounded animate-pulse" />
+                <div className="w-24 h-5 bg-gray-100 rounded animate-pulse" />
+              </div>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex-1 h-12 bg-gray-100 rounded animate-pulse" />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Right sidebar Skeleton */}
+        <div className="w-80 flex-shrink-0 border-l border-gray-200 bg-white overflow-y-auto p-5 space-y-4">
+          <div className="w-32 h-5 bg-gray-200 rounded animate-pulse mb-4" />
+          <div className="h-32 bg-gray-100 rounded-xl animate-pulse" />
+          <div className="h-40 bg-gray-100 rounded-xl animate-pulse" />
+          <div className="h-32 bg-gray-100 rounded-xl animate-pulse" />
         </div>
       </div>
     )
@@ -267,16 +308,19 @@ export function DealApprovalDashboard() {
   if (dealError || !deal) {
     return (
       <div className="flex flex-1 items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-sm font-medium text-red-600 mb-1">Deal not found</p>
-          <p className="text-xs text-gray-400 mb-4">
-            {dealId} could not be loaded from the backend.
+        <div className="text-center bg-white p-8 rounded-xl border border-gray-200 shadow-sm max-w-sm w-full mx-4">
+          <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-6 h-6" />
+          </div>
+          <p className="text-base font-semibold text-gray-900 mb-2">Deal Not Found</p>
+          <p className="text-sm text-gray-500 mb-6">
+            The deal <span className="font-mono bg-gray-100 px-1 rounded text-gray-700">{dealId}</span> could not be loaded. It may have been deleted or you might not have permission to view it.
           </p>
           <button
             onClick={() => navigate('/queue')}
-            className="text-sm text-blue-600 hover:underline"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
-            ← Back to queue
+            Return to Deal Queue
           </button>
         </div>
       </div>

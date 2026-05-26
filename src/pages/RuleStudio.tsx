@@ -17,6 +17,8 @@ import {
   TrendingUp,
   Activity,
   Loader2,
+  Users,
+  ChevronDown,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
@@ -27,6 +29,183 @@ import { cn } from '../lib/utils'
 import type { ApiRuleResponse, ApiChecklistResponse } from '../types/api'
 
 type SectionName = 'Checklists' | 'Assets' | 'Library' | 'Templates' | 'Analytics'
+
+type ChecklistType = 'Deal Onboarding' | 'Deal Presignup' | 'PO Validation' | 'Contract Review' | 'Custom'
+type TeamName = 'All Teams' | 'Finance' | 'Sales' | 'Operations' | 'Legal'
+
+interface LocalChecklist extends ApiChecklistResponse {
+  checklist_type: ChecklistType
+  team: TeamName
+}
+
+const CHECKLIST_TYPE_COLORS: Record<ChecklistType, string> = {
+  'Deal Onboarding': 'bg-blue-100 text-blue-700',
+  'Deal Presignup': 'bg-purple-100 text-purple-700',
+  'PO Validation': 'bg-amber-100 text-amber-700',
+  'Contract Review': 'bg-emerald-100 text-emerald-700',
+  'Custom': 'bg-gray-100 text-gray-600',
+}
+
+const TEAM_COLORS: Record<TeamName, string> = {
+  'All Teams': 'bg-gray-100 text-gray-600',
+  'Finance': 'bg-sky-100 text-sky-700',
+  'Sales': 'bg-orange-100 text-orange-700',
+  'Operations': 'bg-teal-100 text-teal-700',
+  'Legal': 'bg-rose-100 text-rose-700',
+}
+
+const CHECKLIST_TYPE_OPTIONS: ChecklistType[] = [
+  'Deal Onboarding',
+  'Deal Presignup',
+  'PO Validation',
+  'Contract Review',
+  'Custom',
+]
+
+const TEAM_OPTIONS: TeamName[] = ['All Teams', 'Finance', 'Sales', 'Operations', 'Legal']
+
+// Preset metadata for existing API checklists (keyed by name substring)
+function enrichChecklist(cl: ApiChecklistResponse): LocalChecklist {
+  const name = cl.name.toLowerCase()
+  let checklist_type: ChecklistType = 'Custom'
+  let team: TeamName = 'All Teams'
+  if (name.includes('onboard')) { checklist_type = 'Deal Onboarding'; team = 'Sales' }
+  else if (name.includes('presign') || name.includes('pre-sign')) { checklist_type = 'Deal Presignup'; team = 'Finance' }
+  else if (name.includes('po') || name.includes('purchase')) { checklist_type = 'PO Validation'; team = 'Operations' }
+  else if (name.includes('contract')) { checklist_type = 'Contract Review'; team = 'Legal' }
+  return { ...cl, checklist_type, team }
+}
+
+// ─── New Checklist Modal ──────────────────────────────────────────────────────
+
+function NewChecklistModal({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void
+  onCreate: (cl: LocalChecklist) => void
+}) {
+  const [name, setName] = useState('')
+  const [type, setType] = useState<ChecklistType>('Deal Onboarding')
+  const [team, setTeam] = useState<TeamName>('All Teams')
+  const [description, setDescription] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleCreate = async () => {
+    if (!name.trim()) { toast.error('Checklist name is required'); return }
+    setSubmitting(true)
+    await new Promise((r) => setTimeout(r, 400))
+    const now = new Date().toISOString()
+    const newCl: LocalChecklist = {
+      id: `cl-local-${Date.now()}`,
+      name: name.trim(),
+      version: 'v1.0.0',
+      rule_ids: [],
+      status: 'draft',
+      created_at: now,
+      updated_at: now,
+      published_at: null,
+      checklist_type: type,
+      team,
+    }
+    onCreate(newCl)
+    toast.success(`"${name.trim()}" created as a draft checklist`)
+    onClose()
+    setSubmitting(false)
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 w-full max-w-md mx-4">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <p className="text-sm font-bold text-gray-900">New Checklist</p>
+          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="px-6 py-5 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Checklist Name <span className="text-red-500">*</span></label>
+            <input
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Deal Onboarding Checklist"
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Type</label>
+            <div className="relative">
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value as ChecklistType)}
+                className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+              >
+                {CHECKLIST_TYPE_OPTIONS.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+              <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> Assign to Team</span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {TEAM_OPTIONS.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTeam(t)}
+                  className={cn(
+                    'text-xs font-medium px-3 py-1.5 rounded-full border transition-colors',
+                    team === t
+                      ? 'border-blue-400 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300',
+                  )}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Description <span className="text-gray-400 font-normal">(optional)</span></label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What is this checklist used for?"
+              rows={3}
+              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-700"
+            />
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="text-sm font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 px-4 py-2 rounded-lg transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleCreate}
+            disabled={submitting}
+            className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-60"
+          >
+            {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            Create Checklist
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const SIDEBAR_ITEMS: { icon: React.ElementType; label: SectionName }[] = [
   { icon: Layers, label: 'Checklists' },
@@ -262,8 +441,33 @@ function BlockSettings({ ruleId }: Readonly<{ ruleId: string }>) {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
+      <div className="flex-1 overflow-y-auto p-5 space-y-5 animate-pulse">
+        <div>
+          <div className="h-3 bg-gray-200 rounded w-20 mb-2" />
+          <div className="h-9 bg-gray-100 rounded-lg w-full" />
+        </div>
+        <div>
+          <div className="h-3 bg-gray-200 rounded w-24 mb-2" />
+          <div className="h-24 bg-gray-100 rounded-lg w-full" />
+        </div>
+        <div>
+          <div className="h-3 bg-gray-200 rounded w-32 mb-2" />
+          <div className="flex gap-2">
+            <div className="h-6 bg-gray-100 rounded-full w-16" />
+            <div className="h-6 bg-gray-100 rounded-full w-20" />
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between mb-2">
+            <div className="h-3 bg-gray-200 rounded w-24" />
+            <div className="h-3 bg-gray-200 rounded w-8" />
+          </div>
+          <div className="h-2 bg-gray-100 rounded-full w-full mb-1" />
+          <div className="flex justify-between">
+            <div className="h-2 bg-gray-50 rounded w-8" />
+            <div className="h-2 bg-gray-50 rounded w-8" />
+          </div>
+        </div>
       </div>
     )
   }
@@ -370,16 +574,22 @@ function BlockSettings({ ruleId }: Readonly<{ ruleId: string }>) {
 
 export function RuleStudio() {
   const [activeSection, setActiveSection] = useState<SectionName>('Checklists')
-  const [selectedChecklist, setSelectedChecklist] = useState<ApiChecklistResponse | null>(null)
+  const [selectedChecklist, setSelectedChecklist] = useState<LocalChecklist | null>(null)
   const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null)
+  const [teamFilter, setTeamFilter] = useState<TeamName | 'all'>('all')
+  const [showNewModal, setShowNewModal] = useState(false)
+  const [localChecklists, setLocalChecklists] = useState<LocalChecklist[]>([])
 
   const { data: checklistsData, isLoading: checklistsLoading } = useChecklists()
   const { data: rulesBySectionData, isLoading: rulesLoading } = useRules()
 
-  const checklists = checklistsData?.items ?? []
-  const activeChecklist = selectedChecklist ?? checklists[0] ?? null
+  const apiChecklists: LocalChecklist[] = (checklistsData?.items ?? []).map(enrichChecklist)
+  const allChecklists: LocalChecklist[] = [...apiChecklists, ...localChecklists]
+  const filteredChecklists =
+    teamFilter === 'all' ? allChecklists : allChecklists.filter((cl) => cl.team === teamFilter)
 
-  // Filter rules to those belonging to the active checklist
+  const activeChecklist: LocalChecklist | null = selectedChecklist ?? filteredChecklists[0] ?? null
+
   const allRules = (rulesBySectionData ?? []).flatMap((s) => s.rules)
   const checklistRuleIds = new Set(activeChecklist?.rule_ids ?? [])
   const visibleRules =
@@ -387,6 +597,17 @@ export function RuleStudio() {
 
   return (
     <div className="flex flex-1 overflow-hidden bg-gray-50">
+      {showNewModal && (
+        <NewChecklistModal
+          onClose={() => setShowNewModal(false)}
+          onCreate={(cl) => {
+            setLocalChecklists((prev) => [cl, ...prev])
+            setSelectedChecklist(cl)
+            setSelectedRuleId(null)
+          }}
+        />
+      )}
+
       {/* Inner sidebar: Rule Studio nav */}
       <div className="w-48 flex-shrink-0 border-r border-gray-200 bg-white flex flex-col">
         <div className="px-4 py-4 border-b border-gray-100">
@@ -431,22 +652,62 @@ export function RuleStudio() {
       {activeSection === 'Checklists' && (
         <>
           {/* Checklist list */}
-          <div className="w-56 flex-shrink-0 border-r border-gray-200 bg-white flex flex-col overflow-hidden">
-            <div className="px-4 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
-              <p className="text-sm font-semibold text-gray-900">Checklists</p>
-              <button className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors">
-                <Plus className="w-4 h-4" />
-              </button>
+          <div className="w-64 flex-shrink-0 border-r border-gray-200 bg-white flex flex-col overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 flex-shrink-0">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-sm font-semibold text-gray-900">Rule Sets</p>
+                <button
+                  onClick={() => setShowNewModal(true)}
+                  className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                  title="New checklist"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+              {/* Team filter */}
+              <div className="flex flex-wrap gap-1">
+                {(['all', ...TEAM_OPTIONS.filter(t => t !== 'All Teams')] as const).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => { setTeamFilter(t as TeamName | 'all'); setSelectedChecklist(null) }}
+                    className={cn(
+                      'text-xs font-medium px-2 py-0.5 rounded-full border transition-colors',
+                      teamFilter === t
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'border-gray-200 text-gray-500 hover:border-gray-300',
+                    )}
+                  >
+                    {t === 'all' ? 'All' : t}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
               {checklistsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-4 h-4 animate-spin text-gray-300" />
+                <div className="space-y-1.5 p-1">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="w-full px-3 py-3 rounded-xl border border-gray-100 bg-white animate-pulse">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="h-3 bg-gray-100 rounded w-12" />
+                        <div className="h-4 bg-gray-100 rounded-full w-16" />
+                      </div>
+                      <div className="h-3 bg-gray-50 rounded w-10" />
+                    </div>
+                  ))}
                 </div>
-              ) : checklists.length === 0 ? (
-                <p className="text-xs text-gray-400 text-center py-4">No checklists found.</p>
+              ) : filteredChecklists.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-xs text-gray-400 mb-2">No checklists found.</p>
+                  <button
+                    onClick={() => setShowNewModal(true)}
+                    className="text-xs font-medium text-blue-600 hover:underline"
+                  >
+                    Create one
+                  </button>
+                </div>
               ) : (
-                checklists.map((cl) => (
+                filteredChecklists.map((cl) => (
                   <button
                     key={cl.id}
                     onClick={() => { setSelectedChecklist(cl); setSelectedRuleId(null) }}
@@ -457,9 +718,11 @@ export function RuleStudio() {
                         : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50',
                     )}
                   >
-                    <p className="text-xs font-semibold text-gray-900 leading-tight">{cl.name}</p>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <span className="text-xs text-gray-400">{cl.rule_ids.length} rules</span>
+                    <p className="text-xs font-semibold text-gray-900 leading-tight mb-1.5">{cl.name}</p>
+                    <div className="flex flex-wrap items-center gap-1 mb-1">
+                      <span className={cn('text-xs font-medium px-1.5 py-0.5 rounded-full', CHECKLIST_TYPE_COLORS[cl.checklist_type])}>
+                        {cl.checklist_type}
+                      </span>
                       <span
                         className={cn(
                           'text-xs font-medium px-1.5 py-0.5 rounded-full',
@@ -471,10 +734,24 @@ export function RuleStudio() {
                         {cl.status}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-400 mt-0.5">{cl.version}</p>
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                      <Users className="w-3 h-3" />
+                      <span>{cl.team}</span>
+                      <span>·</span>
+                      <span>{cl.rule_ids.length} rules</span>
+                    </div>
                   </button>
                 ))
               )}
+            </div>
+            <div className="px-3 py-3 border-t border-gray-100 flex-shrink-0">
+              <button
+                onClick={() => setShowNewModal(true)}
+                className="w-full flex items-center justify-center gap-1.5 border border-dashed border-gray-300 text-gray-500 hover:border-blue-400 hover:text-blue-600 text-xs font-medium py-2 rounded-lg transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                New Rule Set
+              </button>
             </div>
           </div>
 
@@ -482,19 +759,27 @@ export function RuleStudio() {
           <div className="flex-1 flex flex-col overflow-hidden min-w-0">
             <div className="bg-white border-b border-gray-200 px-5 py-3 flex items-center gap-3 flex-shrink-0">
               <span className="text-sm font-semibold text-gray-900">
-                {activeChecklist?.name ?? 'Select a checklist'}
+                {activeChecklist?.name ?? 'Select a rule set'}
               </span>
               {activeChecklist && (
-                <span
-                  className={cn(
-                    'text-xs font-medium px-2 py-0.5 rounded-full',
-                    activeChecklist.status === 'active'
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'bg-amber-100 text-amber-700',
-                  )}
-                >
-                  {activeChecklist.status}
-                </span>
+                <>
+                  <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full', CHECKLIST_TYPE_COLORS[activeChecklist.checklist_type])}>
+                    {activeChecklist.checklist_type}
+                  </span>
+                  <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full', TEAM_COLORS[activeChecklist.team])}>
+                    <span className="flex items-center gap-1"><Users className="w-3 h-3" />{activeChecklist.team}</span>
+                  </span>
+                  <span
+                    className={cn(
+                      'text-xs font-medium px-2 py-0.5 rounded-full',
+                      activeChecklist.status === 'active'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-amber-100 text-amber-700',
+                    )}
+                  >
+                    {activeChecklist.status}
+                  </span>
+                </>
               )}
               <div className="ml-auto flex items-center gap-2">
                 <button
@@ -514,9 +799,23 @@ export function RuleStudio() {
 
             <div className="flex-1 overflow-y-auto p-5 space-y-3">
               {rulesLoading ? (
-                <div className="flex items-center justify-center py-16 gap-2 text-gray-400">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span className="text-sm">Loading rules...</span>
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="border border-gray-100 rounded-xl p-4 bg-white animate-pulse">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="h-4 bg-gray-200 rounded-full w-24" />
+                          </div>
+                          <div className="h-4 bg-gray-200 rounded w-1/2" />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 mt-2">
+                        <div className="h-3 bg-gray-100 rounded w-20" />
+                        <div className="h-3 bg-gray-100 rounded w-24" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : visibleRules.length === 0 ? (
                 <div className="text-center py-16 text-gray-400">
