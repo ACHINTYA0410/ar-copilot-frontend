@@ -12,7 +12,7 @@ import { useDeals } from '../../context/DealsContext'
 
 const NAV_ITEMS = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard' },
-  { label: 'Deal Queue', icon: Inbox, to: '/queue', badgeDynamic: true },
+  { label: 'Queue', icon: Inbox, to: '/queue', badgeDynamic: true },
   { label: 'Rule Studio', icon: Sliders, to: '/rules' },
   { label: 'Audit Log', icon: ClipboardList, to: '/audit' },
 ]

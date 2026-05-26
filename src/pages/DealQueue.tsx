@@ -295,7 +295,7 @@ export function DealQueue() {
         {/* Header */}
         <div className="sticky top-0 bg-gray-50 z-10 px-6 pt-6 pb-4 border-b border-gray-200">
           <div className="flex items-center justify-between mb-5">
-            <h1 className="text-xl font-bold text-gray-900">Deal Queue</h1>
+            <h1 className="text-xl font-bold text-gray-900">Queue</h1>
             <button className="flex items-center gap-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors">
               <SlidersHorizontal className="w-4 h-4" />
               Bulk Actions
@@ -379,20 +379,56 @@ export function DealQueue() {
             </div>
 
             {dealsLoading ? (
-              <div className="flex items-center justify-center py-16 gap-3 text-gray-400">
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span className="text-sm">Loading deals...</span>
+              <div className="divide-y divide-gray-50">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="grid grid-cols-[24px_200px_100px_160px_80px_120px_40px] gap-4 px-4 py-4 items-center">
+                    <div className="w-4 h-4 bg-gray-100 rounded animate-pulse" />
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
+                      <div className="space-y-2 flex-1">
+                        <div className="h-4 bg-gray-100 rounded w-3/4 animate-pulse" />
+                        <div className="h-3 bg-gray-50 rounded w-1/2 animate-pulse" />
+                      </div>
+                    </div>
+                    <div className="h-4 bg-gray-100 rounded w-20 animate-pulse" />
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-gray-100 animate-pulse flex-shrink-0" />
+                      <div className="space-y-2 flex-1">
+                        <div className="h-3 bg-gray-100 rounded w-24 animate-pulse" />
+                        <div className="h-2.5 bg-gray-50 rounded w-16 animate-pulse" />
+                      </div>
+                    </div>
+                    <div className="h-3 bg-gray-100 rounded w-12 animate-pulse" />
+                    <div className="flex items-center gap-2">
+                      <div className="w-20 h-1.5 bg-gray-100 rounded-full animate-pulse" />
+                      <div className="w-8 h-3 bg-gray-50 rounded animate-pulse" />
+                    </div>
+                    <div className="w-7 h-7 bg-gray-50 rounded-lg animate-pulse" />
+                  </div>
+                ))}
               </div>
             ) : dealsError ? (
-              <div className="px-4 py-12 text-center">
+              <div className="px-4 py-16 text-center">
+                <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <AlertTriangle className="w-6 h-6" />
+                </div>
                 <p className="text-sm font-medium text-red-600 mb-1">Failed to load deals</p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-500">
                   Check that the FastAPI server is running on port 8000.
                 </p>
+                <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                  Try Again
+                </button>
               </div>
             ) : deals.length === 0 ? (
-              <div className="px-4 py-12 text-center text-gray-400 text-sm">
-                No deals match your filters.
+              <div className="px-4 py-16 text-center flex flex-col items-center">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-100">
+                  <Search className="w-6 h-6 text-gray-300" />
+                </div>
+                <p className="text-sm font-medium text-gray-900 mb-1">No deals found</p>
+                <p className="text-xs text-gray-500 max-w-sm">
+                  We couldn't find any deals matching your current filters. Try adjusting your search criteria or clearing filters.
+                </p>
               </div>
             ) : (
               deals.map((deal) => {

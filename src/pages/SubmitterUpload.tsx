@@ -537,9 +537,20 @@ export function SubmitterUpload() {
 
             {(stream.status === 'connecting' || stream.status === 'streaming') &&
               stream.results.length === 0 && (
-                <div className="px-5 py-8 flex items-center justify-center gap-2 text-gray-400">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-xs">Starting validation engine...</span>
+                <div className="divide-y divide-gray-50">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="px-5 py-3 animate-pulse">
+                      <div className="flex items-start gap-3">
+                        <div className="w-4 h-4 rounded-full bg-gray-200 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-3 bg-gray-200 rounded w-3/4" />
+                          <div className="h-2.5 bg-gray-100 rounded w-full" />
+                          <div className="h-2.5 bg-gray-100 rounded w-5/6" />
+                        </div>
+                        <div className="w-8 h-3 bg-gray-100 rounded flex-shrink-0" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -555,8 +566,15 @@ export function SubmitterUpload() {
             )}
 
             {stream.status === 'error' && (
-              <div className="px-5 py-4 bg-red-50">
-                <p className="text-xs font-medium text-red-700">{stream.error}</p>
+              <div className="px-5 py-6">
+                <div className="bg-red-50 border border-red-100 rounded-lg p-4 text-center">
+                  <AlertTriangle className="w-6 h-6 text-red-500 mx-auto mb-2" />
+                  <p className="text-sm font-semibold text-red-800 mb-1">Validation Error</p>
+                  <p className="text-xs text-red-600 mb-3">{stream.error}</p>
+                  <button onClick={handleReset} className="px-3 py-1.5 bg-white border border-red-200 text-red-700 text-xs font-medium rounded hover:bg-red-50 transition-colors">
+                    Reset & Try Again
+                  </button>
+                </div>
               </div>
             )}
           </div>
