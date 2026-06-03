@@ -7,6 +7,7 @@ import { DealApprovalDashboard } from './pages/DealApprovalDashboard'
 import { SubmitterUpload } from './pages/SubmitterUpload'
 import { RuleStudio } from './pages/RuleStudio'
 import { AuditLog } from './pages/AuditLog'
+import { POValidation } from './pages/POValidation'
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="/queue" element={<DealQueue />} />
             <Route path="/deal/:dealId" element={<DealApprovalDashboard />} />
             <Route path="/rules" element={<RuleStudio />} />
+            <Route path="/po-validation" element={<POValidation />} />
             <Route path="/audit" element={<AuditLog />} />
           </Route>
         </Routes>

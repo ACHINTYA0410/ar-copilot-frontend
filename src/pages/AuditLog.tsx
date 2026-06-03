@@ -14,7 +14,6 @@ import {
   CheckCircle2,
   RefreshCw,
   Shield,
-  Loader2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuditLog, useAuditStats } from '../hooks/useAuditLog'
