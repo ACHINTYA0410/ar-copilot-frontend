@@ -88,7 +88,7 @@ function SuccessScreen({
 }>) {
   const navigate = useNavigate()
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="app-shell flex flex-col h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Zap className="w-5 h-5 text-blue-600" />
@@ -261,7 +261,7 @@ export function SubmitterUpload() {
   const uploadsDone = uploadedFiles.length > 0 && uploadedFiles.every((f) => !f.uploading)
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
+    <div className="app-shell flex flex-col h-screen bg-gray-50 overflow-hidden">
       {/* Top bar */}
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
         <div className="flex items-start justify-between">

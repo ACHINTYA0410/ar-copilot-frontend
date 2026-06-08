@@ -844,32 +844,22 @@ export function RuleStudio() {
             </div>
           </div>
 
-          {/* Block Settings */}
-          <div className="w-72 flex-shrink-0 border-l border-gray-200 bg-white flex flex-col overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2 flex-shrink-0">
-              <Settings className="w-4 h-4 text-gray-400" />
-              <p className="text-sm font-semibold text-gray-900">Block Settings</p>
-              {selectedRuleId && (
+          {/* Block Settings — only mounted when a rule is selected */}
+          {selectedRuleId && (
+            <div className="w-72 flex-shrink-0 border-l border-gray-200 bg-white flex flex-col overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2 flex-shrink-0">
+                <Settings className="w-4 h-4 text-gray-400" />
+                <p className="text-sm font-semibold text-gray-900">Block Settings</p>
                 <button
                   onClick={() => setSelectedRuleId(null)}
                   className="ml-auto p-1 text-gray-400 hover:text-gray-600 rounded"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
-              )}
-            </div>
-
-            {selectedRuleId ? (
-              <BlockSettings ruleId={selectedRuleId} />
-            ) : (
-              <div className="flex-1 flex items-center justify-center text-center p-6">
-                <div>
-                  <Settings className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                  <p className="text-sm text-gray-400">Select a rule block to edit its settings</p>
-                </div>
               </div>
-            )}
-          </div>
+              <BlockSettings ruleId={selectedRuleId} />
+            </div>
+          )}
         </>
       )}
 
